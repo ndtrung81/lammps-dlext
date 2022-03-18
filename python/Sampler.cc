@@ -46,20 +46,15 @@ inline py::capsule encapsulate(DLManagedTensor* dl_managed_tensor)
   return py::capsule(dl_managed_tensor, kDLTensorCapsuleName);
 }
 
-Sampler::Sampler(shared_ptr<SystemDefinition> sysdef,
-                 py::function python_update)
-  :
-  HalfStepHook(),
-  m_python_update(python_update)
+Sampler::Sampler(LAMMPS* lmp,  py::function python_update)
+  : FixDLextKOKKOS(lmp), m_python_update(python_update)
 {
-  this->setSystemDefinition(sysdef);
+  this->setSystemDefinition(lmp);
 }
 
-void Sampler::setSystemDefinition(shared_ptr<SystemDefinition> sysdef)
+void Sampler::setSystemDefinition(LAMMPS* lmp)
 {
-  m_sysdef = sysdef;
-  m_pdata = sysdef->getParticleData();
-  m_exec_conf = m_pdata->getExecConf();
+  m_lmp = lmp;
 }
 
 void Sampler::run_on_data(py::function py_exec, const access_location::Enum location, const access_mode::Enum mode)
@@ -72,6 +67,11 @@ void Sampler::run_on_data(py::function py_exec, const access_location::Enum loca
 #else
   const bool on_device = false;
 #endif//ENABLE_CUDA
+
+  atomKK->sync(execution_space,datamask_read);
+
+  v = atomKK->k_v.view<DeviceType>();
+  f = atomKK->k_f.view<DeviceType>();
 
   const ArrayHandle<Scalar4> pos(m_pdata->getPositions(), location, mode);
   auto pos_bridge = wrap<Scalar4, Scalar>(pos.data, on_device, 4 );

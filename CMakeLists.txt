@@ -4,13 +4,13 @@ cmake_minimum_required(VERSION 3.16..3.22)
 project(dlext LANGUAGES C CXX)
 
 # Try finding LAMMPS first from the current environment
-find_package(LAMMPS 07Jan22 QUIET)
+find_package(LAMMPS 20220107 QUIET)
 
 set(PROJECT_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_MODULE_PATH})
 
 if(NOT LAMMPS_FOUND)
-    find_package(LAMMPS 07Jan22 REQUIRED)
+    find_package(LAMMPS 20220217 REQUIRED)
 endif()
 
 if(NOT LAMMPS_INSTALL_PREFIX)

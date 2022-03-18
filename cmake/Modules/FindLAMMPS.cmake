@@ -46,15 +46,20 @@ else(FOUND_LAMMPS_ROOT)
   message(FATAL_ERROR "Could not find lammps installation, either set LAMMPS_ROOT or set PYTHON_EXECUTABLE to a python which can find lammps")
 endif(FOUND_LAMMPS_ROOT)
 
+
+
 # search for the lammps include directory
 find_path(LAMMPS_INCLUDE_DIR
-          NAMES version.h
-          HINTS ${LAMMPS_ROOT}/include
+          NAMES lammps.h
+          HINTS ${CMAKE_PREFIX_PATH}/include/lammps
+          HINTS ${LAMMPS_ROOT}/../../../../include/lammps
           )
 
 if (LAMMPS_INCLUDE_DIR)
-    message(STATUS "Found LAMMPS include directory: ${LAMMPS_INCLUDE_DIR}")
+    message(STATUS "Found LAMMPS include directory at: ${LAMMPS_INCLUDE_DIR}")
     mark_as_advanced(LAMMPS_INCLUDE_DIR)
+else(LAMMPS_INCLUDE_DIR)
+    message(STATUS "Cannot find LAMMPS include directory at ${CMAKE_PREFIX_PATH}/include/lammps")
 endif (LAMMPS_INCLUDE_DIR)
 
 set(LAMMPS_FOUND FALSE)
@@ -75,33 +80,43 @@ include_directories(${LAMMPS_INCLUDE_DIR})
 
 # run all of LAMMPS's generic lib setup scripts
 set(CMAKE_MODULE_PATH ${LAMMPS_ROOT}
-                      ${LAMMPS_ROOT}/CMake/lammps
+                      ${LAMMPS_ROOT}/../../../../lib64/cmake/LAMMPS
+                      ${LAMMPS_ROOT}/../../../../lib64/cmake/Kokkos
                       ${CMAKE_MODULE_PATH}
                       )
-
+#message(STATUS "current module path " ${CMAKE_MODULE_PATH})
 # grab previously-set lammps configuration
-include (lammps_cache)
+#include (lammps_cache)
 
 # Handle user build options
-include (CMake_build_options)
-include (CMake_preprocessor_flags)
+#include (CMake_build_options)
+#include (CMake_preprocessor_flags)
 # setup the install directories
-include (CMake_install_options)
+#include (CMake_install_options)
 
 # Find the python executable and libraries
 include (LAMMPSPythonSetup)
 # Find CUDA and set it up
-include (LAMMPSCUDASetup)
+#include (LAMMPSCUDASetup)
 # Set default CFlags
-include (LAMMPSCFlagsSetup)
+#include (LAMMPSCFlagsSetup)
 # include some os specific options
-include (LAMMPSOSSpecificSetup)
+#include (LAMMPSOSSpecificSetup)
 # setup common libraries used by all targets in this project
-include (LAMMPSCommonLibsSetup)
+#include (LAMMPSCommonLibsSetup)
 # setup macros
-include (LAMMPSMacros)
+#include (LAMMPSMacros)
 # setup MPI support
-include (LAMMPSMPISetup)
+#include (LAMMPSMPISetup)
+
+include (LAMMPSConfig)
+include (LAMMPSConfigVersion)
+include (LAMMPS_Targets)
+
+#include (KokkosConfig)
+#include (KokkosConfigCommon)
+#include (KokkosConfigVersion)
+#include (KokkosTargets)
 
 set(LAMMPS_LIB ${LAMMPS_ROOT}/_lammps${PYTHON_MODULE_EXTENSION})
 

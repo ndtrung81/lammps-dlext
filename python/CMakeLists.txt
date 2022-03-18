@@ -21,7 +21,7 @@ if(ENABLE_MPI)
    endif()
 endif()
 
-fix_cudart_rpath(${pybind11_MODULE_NAME})
+#fix_cudart_rpath(${pybind11_MODULE_NAME})
 
 # Install the library
 install(TARGETS ${pybind11_MODULE_NAME}

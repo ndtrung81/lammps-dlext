@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 // This file is part of `hoomd-dlext`, see LICENSE.md
 
-#ifndef PY_HOOMD_DLPACK_EXTENSION_H_
-#define PY_HOOMD_DLPACK_EXTENSION_H_
+#ifndef PY_LAMMPS_DLPACK_EXTENSION_H_
+#define PY_LAMMPS_DLPACK_EXTENSION_H_
 
 
 #include "DLExt.h"
 
-#include "hoomd/extern/pybind/include/pybind11/pybind11.h"
+#include "pybind11/pybind11.h"
 
 
 namespace dlext
@@ -45,4 +45,4 @@ inline pybind11::capsule encapsulate(
 } // namespace dlext
 
 
-#endif // PY_HOOMD_DLPACK_EXTENSION_H_
+#endif // PY_LAMMPS_DLPACK_EXTENSION_H_
