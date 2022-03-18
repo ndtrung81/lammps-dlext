@@ -9,7 +9,7 @@
 # LAMMPS_INCLUDE_DIR :   a list of all include directories that need to be set to include LAMMPS
 # LAMMPS_LIB :           a cached var locating the lammps library to link to
 #
-# various ENABLE_ flags translated from lammps_config.h so this plugin build can match the ABI of the installed lammps
+# NOTE: various BUILD_ and ENABLE_ flags translated from lammps_config.h so this plugin build can match the ABI of the installed lammps
 #
 # as a convenience (for the intended purpose of this find script), all include directories and definitions needed
 # to compile with all the various libs (boost, python, winsoc, etc...) are set within this script
@@ -86,7 +86,7 @@ set(CMAKE_MODULE_PATH ${LAMMPS_ROOT}
                       )
 #message(STATUS "current module path " ${CMAKE_MODULE_PATH})
 # grab previously-set lammps configuration
-#include (lammps_cache)
+include (lammps_cache)
 
 # Handle user build options
 #include (CMake_build_options)
@@ -118,7 +118,8 @@ include (LAMMPS_Targets)
 #include (KokkosConfigVersion)
 #include (KokkosTargets)
 
-set(LAMMPS_LIB ${LAMMPS_ROOT}/_lammps${PYTHON_MODULE_EXTENSION})
+#set(LAMMPS_LIB ${LAMMPS_ROOT}/_lammps${PYTHON_MODULE_EXTENSION})
+set(LAMMPS_LIB ${LAMMPS_ROOT}/../../../../lib64/liblammps.so)
 
 set(LAMMPS_LIBRARIES ${LAMMPS_LIB} ${LAMMPS_COMMON_LIBS})
 

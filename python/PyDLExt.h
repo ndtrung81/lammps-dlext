@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// This file is part of `hoomd-dlext`, see LICENSE.md
+// This file is part of `lammps-dlext`, see LICENSE.md
 
 #ifndef PY_LAMMPS_DLPACK_EXTENSION_H_
 #define PY_LAMMPS_DLPACK_EXTENSION_H_

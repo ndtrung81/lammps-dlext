@@ -26,7 +26,7 @@ include("${PROJECT_MODULE_PATH}/FetchCPM.cmake")
 include("${PROJECT_MODULE_PATH}/FetchDLPack.cmake")
 
 # Plugins must be built as shared libraries
-if(ENABLE_STATIC)
+if(NOT BUILD_SHARED_LIBS)
     message(SEND_ERROR "Plugins cannot be built against a statically compiled LAMMPS")
 endif()
 

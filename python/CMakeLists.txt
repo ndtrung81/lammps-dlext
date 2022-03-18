@@ -6,9 +6,12 @@ target_compile_features(${pybind11_MODULE_NAME} PRIVATE cxx_std_11)
 target_link_libraries(${pybind11_MODULE_NAME} PRIVATE ${PROJECT_NAME})
 target_sources(${pybind11_MODULE_NAME} PRIVATE PyDLExt.cc Sampler.cc)
 
+# add include path to pybind11 available from the virtual environment: $HOME/miniconda3/envs/pysages/include
+target_include_directories(${pybind11_MODULE_NAME} PUBLIC ${CMAKE_INSTALL_PREFIX}/../../../../include)
+ 
 # if we are compiling with MPI support built in, set appropriate
 # compiler/linker flags
-if(ENABLE_MPI)
+if(BUILD_MPI)
    if(MPI_COMPILE_FLAGS)
        set_target_properties(
            ${pybind11_MODULE_NAME} PROPERTIES COMPILE_FLAGS "${MPI_CXX_COMPILE_FLAGS}"

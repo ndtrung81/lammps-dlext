@@ -1,7 +1,7 @@
 // TODO: Switch from HOOMD API to LAMMPS API via the KOKKOS package
 
 #include "Sampler.h"
-#include "hoomd/HOOMDMath.h"
+//#include "hoomd/HOOMDMath.h"
 #include <stdexcept>
 
 using namespace std;
@@ -47,9 +47,9 @@ inline py::capsule encapsulate(DLManagedTensor* dl_managed_tensor)
 }
 
 Sampler::Sampler(LAMMPS* lmp,  py::function python_update)
-  : FixDLextKOKKOS(lmp), m_python_update(python_update)
+  : Fix(lmp), m_python_update(python_update)
 {
-  this->setSystemDefinition(lmp);
+//  this->setSystemDefinition(lmp);
 }
 
 void Sampler::setSystemDefinition(LAMMPS* lmp)

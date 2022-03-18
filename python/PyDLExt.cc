@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-// This file is part of `hoomd-dlext`, see LICENSE.md
+// This file is part of `lammps-dlext`, see LICENSE.md
 
 #include "PyDLExt.h"
-#include "PyHalfStepHook.h"
+//#include "PyHalfStepHook.h"
 #include "Sampler.h"
 
 
@@ -13,6 +13,7 @@ namespace py = pybind11;
 void export_SystemView(py::module& m)
 {
     py::class_<SystemView, std::shared_ptr<SystemView>>(m, "SystemView")
+/*    
         .def(py::init<SystemDefinitionSPtr>())
         .def("particle_data", &SystemView::particle_data)
         .def("is_gpu_enabled", &SystemView::is_gpu_enabled)
@@ -20,18 +21,20 @@ void export_SystemView(py::module& m)
         .def("global_particle_number", &SystemView::global_particle_number)
         .def("get_device_id", &SystemView::get_device_id)
         .def("synchronize", &SystemView::synchronize)
+*/        
     ;
 }
 
 void export_PyHalfStepHook(py::module m)
 {
-    using HalfStepHookSPtr = std::shared_ptr<HalfStepHook>;
-
+//    using HalfStepHookSPtr = std::shared_ptr<HalfStepHook>;
+/*
     py::class_<HalfStepHook, PyHalfStepHook, HalfStepHookSPtr>(m, "HalfStepHook")
         .def(py::init<>())
         .def("setSystemDefinition", &HalfStepHook::setSystemDefinition)
         .def("update", &HalfStepHook::update)
     ;
+*/
 }
 
 
