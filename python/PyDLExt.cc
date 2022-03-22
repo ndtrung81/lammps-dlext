@@ -40,6 +40,7 @@ void export_PyHalfStepHook(py::module m)
 
 PYBIND11_MODULE(dlpack_extension, m)
 {
+/*    
     // Enums
     py::enum_<AccessLocation>(m, "AccessLocation")
         .value("OnHost", kOnHost)
@@ -73,4 +74,5 @@ PYBIND11_MODULE(dlpack_extension, m)
     m.def("net_forces", encapsulate<&net_forces>);
     m.def("net_torques", encapsulate<&net_torques>);
     m.def("net_virial", encapsulate<&net_virial>);
+*/    
 }

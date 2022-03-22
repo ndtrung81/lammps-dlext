@@ -46,19 +46,21 @@ inline py::capsule encapsulate(DLManagedTensor* dl_managed_tensor)
   return py::capsule(dl_managed_tensor, kDLTensorCapsuleName);
 }
 
-Sampler::Sampler(LAMMPS* lmp,  py::function python_update)
-  : Fix(lmp), m_python_update(python_update)
+Sampler::Sampler(LAMMPS_NS::LAMMPS* lmp, int narg, char** arg, py::function python_update)
+  : Fix(lmp, narg, arg), m_python_update(python_update)
 {
 //  this->setSystemDefinition(lmp);
 }
 
-void Sampler::setSystemDefinition(LAMMPS* lmp)
+void Sampler::setSystemDefinition(LAMMPS_NS::LAMMPS* lmp)
 {
-  m_lmp = lmp;
+//  m_lmp = lmp;
 }
 
-void Sampler::run_on_data(py::function py_exec, const access_location::Enum location, const access_mode::Enum mode)
+//void Sampler::run_on_data(py::function py_exec, const access_location::Enum location, const access_mode::Enum mode)
+void Sampler::run_on_data(py::function py_exec)
 {
+/*
 #ifdef ENABLE_CUDA
   if(location == access_location::device and not m_exec_conf->isCUDAEnabled())
     throw runtime_error("Invalid request for device memory in non-cuda run.");
@@ -94,11 +96,12 @@ void Sampler::run_on_data(py::function py_exec, const access_location::Enum loca
   auto force_capsule = encapsulate(&force_bridge.tensor);
 
   py_exec(pos_capsule, vel_capsule, rtags_capsule, img_capsule, force_capsule);
+*/  
 }
 
-void Sampler::update(unsigned int timestep)
+void Sampler::post_force(int)
 {
-
+/*
   // Accessing the handles here holds them valid until the block of this function.
   // This keeps them valid for the python function call
 #ifdef ENABLE_CUDA
@@ -122,6 +125,7 @@ void Sampler::update(unsigned int timestep)
   // m_python_update(pos_tensor, vel_tensor, rtag_tensor, img_tensor, force_tensor,
   //                 m_pdata->getGlobalBox());
   this->run_on_data(m_python_update, location, access_mode::read);
+*/  
 }
 
 template <typename TV, typename TS>
@@ -131,14 +135,14 @@ DLDataBridge Sampler::wrap(TV* ptr,
                            const uint64_t offset,
                            uint64_t stride1_offset) {
   assert((size2 >= 1)); // assert is a macro so the extra parentheses are requiered here
-
+/*
   const unsigned int particle_number = this->m_pdata->getN();
 #ifdef ENABLE_CUDA
   const int gpu_id = on_device ? m_exec_conf->getGPUIds()[0] : m_exec_conf->getRank();
 #else
   const int gpu_id = m_exec_conf->getRank();
 #endif//ENABLE_CUDA
-
+*/
   DLDataBridge bridge;
   bridge.tensor.manager_ctx = NULL;
   bridge.tensor.deleter = NULL;
@@ -167,8 +171,10 @@ DLDataBridge Sampler::wrap(TV* ptr,
 
 void export_Sampler(py::module& m)
 {
+/*
   py::class_<Sampler, std::shared_ptr<Sampler> >(m, "DLextSampler", py::base<HalfStepHook>())
     .def(py::init<std::shared_ptr<SystemDefinition>, py::function>())
     .def("run_on_data", &Sampler::run_on_data)
     ;
+*/    
 }

@@ -13,9 +13,13 @@
 namespace dlext
 {
 
-
+/*
 using PropertyExtractor =
     DLManagedTensorPtr (*)(const SystemView&, AccessLocation, AccessMode)
+;
+*/
+using PropertyExtractor =
+    DLManagedTensorPtr (*)(const SystemView&)
 ;
 
 const char* const kDLTensorCapsuleName = "dltensor";
@@ -23,9 +27,11 @@ const char* const kDLTensorCapsuleName = "dltensor";
 
 template <PropertyExtractor property>
 inline pybind11::capsule encapsulate(
-    const SystemView& sysview, AccessLocation location, AccessMode mode = kReadWrite
+    const SystemView& sysview
+    //const SystemView& sysview, AccessLocation location, AccessMode mode = kReadWrite
 ) {
-    auto dl_managed_tensor = property(sysview, location, mode);
+    //auto dl_managed_tensor = property(sysview, location, mode);
+    auto dl_managed_tensor = property(sysview);
     return pybind11::capsule(
         dl_managed_tensor, kDLTensorCapsuleName,
         [](PyObject* obj) {  // PyCapsule_Destructor

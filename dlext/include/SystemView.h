@@ -11,7 +11,7 @@
 #include "cxx11utils.h"
 
 //#include "hoomd/ExecutionConfiguration.h"
-//#include "hoomd/GlobalArray.h"
+//#include "hoomd/GlobalArray.h"            // which includes GPUArray.h: access_location::Enum, access_mode::Enum
 #include "lammps.h"
 
 

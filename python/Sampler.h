@@ -18,21 +18,23 @@ struct DLDataBridge {
     DLManagedTensor tensor;
 };
 
+using namespace LAMMPS_NS;
 
 class Sampler : public Fix  // FixDLextKOKKOS
     {
     public:
         //! Constructor
-      Sampler(LAMMPS_NS::LAMMPS* lmp, pybind11::function python_update);
+      Sampler(LAMMPS_NS::LAMMPS* lmp, int narg, char** arg, pybind11::function python_update);
 
-      virtual void setSystemDefinition(LAMMPS* lmp) override;
+      //virtual void setSystemDefinition(LAMMPS* lmp) override;
 
         //! Take one timestep forward
-      virtual void update(unsigned int timestep) override;
+      virtual void post_force(int) override;
 
       // run a custom python function on data from lammps
       // access_mode is ignored for forces. Forces are returned in readwrite mode always.
-      void run_on_data(pybind11::function py_exec, const access_location::Enum location, const access_mode::Enum mode);
+      //void run_on_data(pybind11::function py_exec, const access_location::Enum location, const access_mode::Enum mode);
+      void run_on_data(pybind11::function py_exec);
 
     private:
       template<typename TS, typename TV>

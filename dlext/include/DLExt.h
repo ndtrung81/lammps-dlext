@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 // This file is part of `hoomd-dlext`, see LICENSE.md
 
-#ifndef HOOMD_DLPACK_EXTENSION_H_
-#define HOOMD_DLPACK_EXTENSION_H_
+#ifndef LAMMPS_DLPACK_EXTENSION_H_
+#define LAMMPS_DLPACK_EXTENSION_H_
 
 #include <vector>
 
@@ -15,7 +15,7 @@ namespace dlext
 
 
 using DLManagedTensorPtr = DLManagedTensor*;
-
+/*
 using AccessLocation = access_location::Enum;
 const auto kOnHost = access_location::host;
 #ifdef ENABLE_CUDA
@@ -26,25 +26,26 @@ using AccessMode = access_mode::Enum;
 const auto kRead = access_mode::read;
 const auto kReadWrite = access_mode::readwrite;
 const auto kOverwrite = access_mode::overwrite;
-
-constexpr uint8_t kBits = std::is_same<Scalar, float>::value ? 32 : 64;
+*/
+//constexpr uint8_t kBits = std::is_same<Scalar, float>::value ? 32 : 64;
 
 template <template <typename> class Array, typename T, typename Object>
 using PropertyGetter = const Array<T>& (Object::*)() const;
-
+/*
 template <typename T>
 using ArrayHandleUPtr = std::unique_ptr<ArrayHandle<T>>;
-
+*/
 template <typename T>
 struct DLDataBridge {
-    ArrayHandleUPtr<T> handle;
+//    ArrayHandleUPtr<T> handle;
     std::vector<int64_t> shape;
     std::vector<int64_t> strides;
     DLManagedTensor tensor;
-
+/*
     DLDataBridge(ArrayHandleUPtr<T>& handle)
         : handle { std::move(handle) }
     { }
+*/    
 };
 
 template <typename T>
@@ -59,7 +60,7 @@ void DLDataBridgeDeleter(DLManagedTensorPtr tensor)
 
 template <typename T>
 inline void* opaque(T* data) { return static_cast<void*>(data); }
-
+/*
 inline DLDevice dldevice(const SystemView& sysview, bool gpu_flag)
 {
     return DLDevice { gpu_flag ? kDLCUDA : kDLCPU, sysview.get_device_id(gpu_flag) };
@@ -149,7 +150,8 @@ DLManagedTensorPtr wrap(
 
     return &(bridge.release()->tensor);
 }
-
+*/
+/*
 inline DLManagedTensorPtr positions_types(
     const SystemView& sysview, AccessLocation location, AccessMode mode = kReadWrite
 ) {
@@ -227,9 +229,9 @@ inline DLManagedTensorPtr net_virial(
 ) {
     return wrap(sysview, &ParticleData::getNetVirial, location, mode, 6);
 }
-
+*/
 
 }  // namespace dlext
 
 
-#endif  // HOOMD_DLPACK_EXTENSION_H_
+#endif  // LAMMPS_DLPACK_EXTENSION_H_
