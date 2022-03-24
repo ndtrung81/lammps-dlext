@@ -1,7 +1,9 @@
 // TODO: Switch from HOOMD API to LAMMPS API via the KOKKOS package
 
 #include "Sampler.h"
-//#include "hoomd/HOOMDMath.h"
+#include "KOKKOS/kokkos_type.h"  // this requires LAMMPS KOKKOS essential headers in LAMMPS_INCLUDE_DIR,
+                                 // importantly, kokkos_type.h includes the core KOKKOS headers which are installed in virtual env
+                                 // Scalar, Scalar3, Scalar4, int3 are needed 
 #include <stdexcept>
 
 using namespace std;

@@ -8,6 +8,7 @@ target_sources(${pybind11_MODULE_NAME} PRIVATE PyDLExt.cc Sampler.cc)
 
 # add include path to pybind11 available from the virtual environment: $HOME/miniconda3/envs/pysages/include
 target_include_directories(${pybind11_MODULE_NAME} PUBLIC ${CMAKE_INSTALL_PREFIX}/../../../../include)
+target_include_directories(${pybind11_MODULE_NAME} PUBLIC ${CMAKE_INSTALL_PREFIX}/../../../../include/kokkos)
  
 # if we are compiling with MPI support built in, set appropriate
 # compiler/linker flags
