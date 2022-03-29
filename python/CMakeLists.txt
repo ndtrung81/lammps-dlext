@@ -25,6 +25,9 @@ if(BUILD_MPI)
    endif()
 endif()
 
+set_target_properties(${pybind11_MODULE_NAME} PROPERTIES COMPILE_FLAGS "-DFFT_CUFFT -DFFT_FFTW3 -DFFT_FFTW_THREADS -DKOKKOS_DEPENDENCE -DLAMMPS_FFMPEG -DLAMMPS_GZIP -DLAMMPS_MEMALIGN=64 -DLAMMPS_SMALLBIG -DLMP_KOKKOS -DLMP_PYTHON -DMPICH_SKIP_MPICXX -DOMPI_SKIP_MPICXX -D_MPICC_H  -expt-extended-lambda -Wext-lambda-captures-this -arch=sm_60")
+
+
 #fix_cudart_rpath(${pybind11_MODULE_NAME})
 
 # Install the library
