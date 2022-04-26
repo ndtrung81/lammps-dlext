@@ -20,6 +20,7 @@ struct DLDataBridge {
 
 using namespace LAMMPS_NS;
 
+template<class DeviceType>
 class Sampler : public Fix  // FixDLextKOKKOS
     {
     public:
@@ -37,6 +38,9 @@ class Sampler : public Fix  // FixDLextKOKKOS
       void run_on_data(pybind11::function py_exec);
 
     private:
+      //typename ArrayTypes<DeviceType>::t_v_array v;
+      //typename ArrayTypes<DeviceType>::t_f_array f;
+
       template<typename TS, typename TV>
       DLDataBridge wrap(TS* const ptr, const bool, const int64_t size2 = 1, const uint64_t offset=0, uint64_t stride1_offset = 0);
       pybind11::function m_python_update;

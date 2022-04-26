@@ -1,25 +1,29 @@
-// TODO: Switch from HOOMD API to LAMMPS API via the KOKKOS package
-
 #include "Sampler.h"
-#include "KOKKOS/kokkos_type.h"  // this requires LAMMPS KOKKOS essential headers in LAMMPS_INCLUDE_DIR,
+#include "KOKKOS/kokkos_type.h"  // this requires LAMMPS KOKKOS essential headers in LAMMPS_INCLUDE_DIR (e.g. $HOME/miniconda3/envs/pysages/include/lammps),
                                  // importantly, kokkos_type.h includes the core KOKKOS headers which are installed in virtual env
-                                 // Scalar, Scalar3, Scalar4, int3 are needed 
+                                 // Scalar, Scalar3, Scalar4, int3 are needed
+#include "KOKKOS/atom_kokkos.h"
 #include <stdexcept>
 
 using namespace std;
+using namespace Kokkos;
 namespace py = pybind11;
 
 const char* const kDLTensorCapsuleName = "dltensor";
+template<class Scalar>
 constexpr uint8_t kBits = std::is_same<Scalar, float>::value ? 32 : 64;
+
+// KOKKOS supports double precision for now
 
 template <typename>
 constexpr DLDataType dtype();
 template <>
-constexpr DLDataType dtype<Scalar4>() { return DLDataType {kDLFloat, kBits, 1}; }
+constexpr DLDataType dtype<double4>() { return DLDataType {kDLFloat, 64, 1}; }
 template <>
-constexpr DLDataType dtype<Scalar3>() { return DLDataType {kDLFloat, kBits, 1}; }
+constexpr DLDataType dtype<double3>() { return DLDataType {kDLFloat, 64, 1}; }
 template <>
-constexpr DLDataType dtype<Scalar>() { return DLDataType {kDLFloat, kBits, 1}; }
+constexpr DLDataType dtype<double>() { return DLDataType {kDLFloat, 64, 1}; }
+
 template <>
 constexpr DLDataType dtype<int3>() { return DLDataType {kDLInt, 32, 1}; }
 template <>
@@ -30,11 +34,11 @@ constexpr DLDataType dtype<int>() { return DLDataType {kDLInt, 32, 1}; }
 template <typename>
 constexpr int64_t stride1();
 template <>
-constexpr int64_t stride1<Scalar4>() { return 4; }
+constexpr int64_t stride1<double4>() { return 4; }
 template <>
-constexpr int64_t stride1<Scalar3>() { return 3; }
+constexpr int64_t stride1<double3>() { return 3; }
 template <>
-constexpr int64_t stride1<Scalar>() { return 1; }
+constexpr int64_t stride1<double>() { return 1; }
 template <>
 constexpr int64_t stride1<int3>() { return 3; }
 template <>
@@ -48,19 +52,22 @@ inline py::capsule encapsulate(DLManagedTensor* dl_managed_tensor)
   return py::capsule(dl_managed_tensor, kDLTensorCapsuleName);
 }
 
-Sampler::Sampler(LAMMPS_NS::LAMMPS* lmp, int narg, char** arg, py::function python_update)
+template<class DeviceType>
+Sampler<DeviceType>::Sampler(LAMMPS_NS::LAMMPS* lmp, int narg, char** arg, py::function python_update)
   : Fix(lmp, narg, arg), m_python_update(python_update)
 {
 //  this->setSystemDefinition(lmp);
 }
-
+/*
 void Sampler::setSystemDefinition(LAMMPS_NS::LAMMPS* lmp)
 {
 //  m_lmp = lmp;
 }
+*/
 
 //void Sampler::run_on_data(py::function py_exec, const access_location::Enum location, const access_mode::Enum mode)
-void Sampler::run_on_data(py::function py_exec)
+template<class DeviceType>
+void Sampler<DeviceType>::run_on_data(py::function py_exec)
 {
 /*
 #ifdef ENABLE_CUDA
@@ -71,9 +78,10 @@ void Sampler::run_on_data(py::function py_exec)
 #else
   const bool on_device = false;
 #endif//ENABLE_CUDA
-
+*/
+/*
   atomKK->sync(execution_space,datamask_read);
-
+  
   v = atomKK->k_v.view<DeviceType>();
   f = atomKK->k_f.view<DeviceType>();
 
@@ -101,7 +109,8 @@ void Sampler::run_on_data(py::function py_exec)
 */  
 }
 
-void Sampler::post_force(int)
+template<class DeviceType>
+void Sampler<DeviceType>::post_force(int)
 {
 /*
   // Accessing the handles here holds them valid until the block of this function.
@@ -130,8 +139,9 @@ void Sampler::post_force(int)
 */  
 }
 
+template<class DeviceType>
 template <typename TV, typename TS>
-DLDataBridge Sampler::wrap(TV* ptr,
+DLDataBridge Sampler<DeviceType>::wrap(TV* ptr,
                            const bool on_device,
                            const int64_t size2,
                            const uint64_t offset,
@@ -145,6 +155,8 @@ DLDataBridge Sampler::wrap(TV* ptr,
   const int gpu_id = m_exec_conf->getRank();
 #endif//ENABLE_CUDA
 */
+  const int gpu_id = 0;
+
   DLDataBridge bridge;
   bridge.tensor.manager_ctx = NULL;
   bridge.tensor.deleter = NULL;
@@ -153,11 +165,11 @@ DLDataBridge Sampler::wrap(TV* ptr,
   bridge.tensor.dl_tensor.device = DLDevice{on_device ? kDLCUDA : kDLCPU, gpu_id};
   bridge.tensor.dl_tensor.dtype = dtype<TS>();
 
-  bridge.shape.push_back(particle_number);
+//  bridge.shape.push_back(particle_number);
   if (size2 > 1)
     bridge.shape.push_back(size2);
 
-  bridge.strides.push_back(stride1<TV>() + stride1_offset);
+//  bridge.strides.push_back(stride1<TV>() + stride1_offset);
   if (size2 > 1)
     bridge.strides.push_back(1);
 
