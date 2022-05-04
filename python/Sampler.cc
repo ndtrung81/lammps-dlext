@@ -3,6 +3,7 @@
                                  // importantly, kokkos_type.h includes the core KOKKOS headers which are installed in virtual env
                                  // Scalar, Scalar3, Scalar4, int3 are needed
 #include "KOKKOS/atom_kokkos.h"
+#include "atom_masks.h"
 #include <stdexcept>
 
 using namespace std;
@@ -56,70 +57,68 @@ template<class DeviceType>
 Sampler<DeviceType>::Sampler(LAMMPS_NS::LAMMPS* lmp, int narg, char** arg, py::function python_update)
   : Fix(lmp, narg, arg), m_python_update(python_update)
 {
-//  this->setSystemDefinition(lmp);
-}
-/*
-void Sampler::setSystemDefinition(LAMMPS_NS::LAMMPS* lmp)
-{
-//  m_lmp = lmp;
-}
-*/
+  this->setSimulator(lmp);
 
-//void Sampler::run_on_data(py::function py_exec, const access_location::Enum location, const access_mode::Enum mode)
+  kokkosable = 1;
+  atomKK = (AtomKokkos *) atom;
+
+  execution_space = ExecutionSpaceFromDevice<DeviceType>::space;
+  datamask_read =  V_MASK | F_MASK | MASK_MASK | RMASS_MASK | TYPE_MASK;
+  datamask_modify = F_MASK;
+}
+
+template<class DeviceType>
+void Sampler<DeviceType>::setSimulator(LAMMPS_NS::LAMMPS* lmp)
+{
+  m_lmp = lmp;
+}
+
+
 template<class DeviceType>
 void Sampler<DeviceType>::run_on_data(py::function py_exec)
 {
-/*
-#ifdef ENABLE_CUDA
-  if(location == access_location::device and not m_exec_conf->isCUDAEnabled())
-    throw runtime_error("Invalid request for device memory in non-cuda run.");
+  bool on_device = true;
+  if (execution_space == LAMMPS_NS::Host)
+    on_device = false;
 
-  const bool on_device = location == access_location::device;
-#else
-  const bool on_device = false;
-#endif//ENABLE_CUDA
-*/
-/*
   atomKK->sync(execution_space,datamask_read);
-  
+  x = atomKK->k_x.view<DeviceType>();
   v = atomKK->k_v.view<DeviceType>();
+  image = atomKK->k_image.view<DeviceType>();
+  atomKK->sync(execution_space,datamask_modify);
   f = atomKK->k_f.view<DeviceType>();
 
-  const ArrayHandle<Scalar4> pos(m_pdata->getPositions(), location, mode);
-  auto pos_bridge = wrap<Scalar4, Scalar>(pos.data, on_device, 4 );
+  auto pos_bridge = wrap<double4, double>(x, on_device, 4 );
   auto pos_capsule = encapsulate(&pos_bridge.tensor);
-
-  const ArrayHandle<Scalar4> vel(m_pdata->getVelocities(), location, mode);
-  auto vel_bridge = wrap<Scalar4, Scalar>(vel.data, on_device, 4 );
+  auto vel_bridge = wrap<double4, double>(v, on_device, 4 );
   auto vel_capsule = encapsulate(&vel_bridge.tensor);
-
-  const ArrayHandle<unsigned int> rtags(m_pdata->getRTags(), location, mode);
-  auto rtags_bridge = wrap<unsigned int, unsigned int>(rtags.data, on_device, 1);
-  auto rtags_capsule = encapsulate(&rtags_bridge.tensor);
-
-  const ArrayHandle<int3> img(m_pdata->getImages(), location, mode);
-  auto img_bridge = wrap<int3, int>(img.data, on_device, 3);
+  auto img_bridge = wrap<int3, double>(image, on_device, 3 );
   auto img_capsule = encapsulate(&img_bridge.tensor);
-
-  ArrayHandle<Scalar4> force(m_pdata->getNetForce(), location, access_mode::readwrite);
-  auto force_bridge = wrap<Scalar4, Scalar>(force.data, on_device, 4 );
+  auto force_bridge = wrap<double4, double>(f, on_device, 4 );
   auto force_capsule = encapsulate(&force_bridge.tensor);
 
-  py_exec(pos_capsule, vel_capsule, rtags_capsule, img_capsule, force_capsule);
-*/  
+  py_exec(pos_capsule, vel_capsule, img_capsule, force_capsule); 
 }
 
 template<class DeviceType>
 void Sampler<DeviceType>::post_force(int)
 {
-/*
+
   // Accessing the handles here holds them valid until the block of this function.
   // This keeps them valid for the python function call
-#ifdef ENABLE_CUDA
-  auto location = m_exec_conf->isCUDAEnabled() ? access_location::device : access_location::host;
-#else
-  auto location = access_location::host;
-#endif//ENABLE_CUDA
+  bool on_device = true;
+  if (execution_space == LAMMPS_NS::Host)
+    on_device = false;
+
+  auto pos_bridge = wrap<double4, double>(x, on_device, 4 );
+  auto pos_capsule = encapsulate(&pos_bridge.tensor);
+  auto vel_bridge = wrap<double4, double>(v, on_device, 4 );
+  auto vel_capsule = encapsulate(&vel_bridge.tensor);
+  auto img_bridge = wrap<int3, double>(image, on_device, 3 );
+  auto img_capsule = encapsulate(&img_bridge.tensor);
+  auto force_bridge = wrap<double4, double>(f, on_device, 4 );
+  auto force_capsule = encapsulate(&force_bridge.tensor);
+
 
   // const ArrayHandle<Scalar4> pos(m_pdata->getPositions(), location, access_mode::read);
   // auto pos_tensor = wrap<Scalar4, Scalar>(pos.data, 4 );
@@ -135,8 +134,8 @@ void Sampler<DeviceType>::post_force(int)
 
   // m_python_update(pos_tensor, vel_tensor, rtag_tensor, img_tensor, force_tensor,
   //                 m_pdata->getGlobalBox());
-  this->run_on_data(m_python_update, location, access_mode::read);
-*/  
+  this->run_on_data(m_python_update);
+
 }
 
 template<class DeviceType>
@@ -147,14 +146,8 @@ DLDataBridge Sampler<DeviceType>::wrap(TV* ptr,
                            const uint64_t offset,
                            uint64_t stride1_offset) {
   assert((size2 >= 1)); // assert is a macro so the extra parentheses are requiered here
-/*
-  const unsigned int particle_number = this->m_pdata->getN();
-#ifdef ENABLE_CUDA
-  const int gpu_id = on_device ? m_exec_conf->getGPUIds()[0] : m_exec_conf->getRank();
-#else
-  const int gpu_id = m_exec_conf->getRank();
-#endif//ENABLE_CUDA
-*/
+
+  const unsigned int particle_number = atom->nlocal;
   const int gpu_id = 0;
 
   DLDataBridge bridge;
@@ -165,11 +158,11 @@ DLDataBridge Sampler<DeviceType>::wrap(TV* ptr,
   bridge.tensor.dl_tensor.device = DLDevice{on_device ? kDLCUDA : kDLCPU, gpu_id};
   bridge.tensor.dl_tensor.dtype = dtype<TS>();
 
-//  bridge.shape.push_back(particle_number);
+  bridge.shape.push_back(particle_number);
   if (size2 > 1)
     bridge.shape.push_back(size2);
 
-//  bridge.strides.push_back(stride1<TV>() + stride1_offset);
+  bridge.strides.push_back(stride1<TV>() + stride1_offset);
   if (size2 > 1)
     bridge.strides.push_back(1);
 

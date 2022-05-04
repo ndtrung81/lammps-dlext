@@ -8,6 +8,7 @@
 // TODO: Switch from HOOMD API to LAMMPS API via the KOKKOS package
 
 //#include "lammps/fix_dlext_kokkos.h"
+#include "KOKKOS/kokkos_type.h"
 #include "fix.h"
 #include "pybind11/pybind11.h"
 #include "dlpack/dlpack.h"
@@ -27,7 +28,7 @@ class Sampler : public Fix  // FixDLextKOKKOS
         //! Constructor
       Sampler(LAMMPS_NS::LAMMPS* lmp, int narg, char** arg, pybind11::function python_update);
 
-      //virtual void setSystemDefinition(LAMMPS* lmp) override;
+      virtual void setSimulator(LAMMPS_NS::LAMMPS* lmp) override;
 
         //! Take one timestep forward
       virtual void post_force(int) override;
@@ -38,8 +39,10 @@ class Sampler : public Fix  // FixDLextKOKKOS
       void run_on_data(pybind11::function py_exec);
 
     private:
-      //typename ArrayTypes<DeviceType>::t_v_array v;
-      //typename ArrayTypes<DeviceType>::t_f_array f;
+      typename ArrayTypes<DeviceType>::t_x_array x;
+      typename ArrayTypes<DeviceType>::t_v_array v;
+      typename ArrayTypes<DeviceType>::t_f_array f;
+      typename ArrayTypes<DeviceType>::t_imageint_1d image;
 
       template<typename TS, typename TV>
       DLDataBridge wrap(TS* const ptr, const bool, const int64_t size2 = 1, const uint64_t offset=0, uint64_t stride1_offset = 0);
