@@ -41,6 +41,7 @@ public:
     void post_force(int) override;
     void set_callback(DLExtCallback& cb);
     void set_virial_callback(DLExtSetVirial& cb);
+    void set_virial_global(int flag) { virial_global_flag = flag; }
 
 private:
     DLExtCallback callback = [](TimeStep) { };
