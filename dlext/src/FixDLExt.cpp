@@ -49,6 +49,17 @@ int FixDLExt::setmask()
 
 void FixDLExt::post_force(int vflag) 
 {
+#ifdef LMP_KOKKOS
+    if (has_kokkos_cuda_enabled(lmp)) {
+        // Since there's is no MASS_MASK, we need to make sure
+        // masses are available on the device.
+        atom_kokkos_ptr()->k_mass.sync_device();
+        // On the other hand, MAP_MASK exists, but it's never used
+        // within any of the synchronizations methods.
+        atom_kokkos_ptr()->k_map_array.sync_device();
+    }
+#endif
+
     // virial setup
 
     v_init(vflag);
@@ -68,6 +79,31 @@ void FixDLExt::set_callback(DLExtCallback& cb) { callback = cb; }
 
 // callback from the sampling method to set the virial contribution to the fix's virial
 void FixDLExt::set_virial_callback(DLExtSetVirial& cb) { setVirial = cb; }
+
+// return the pointer to the atom pointer
+Atom* FixDLExt::atom_ptr() const { return lmp->atom; }
+AtomKokkos* FixDLExt::atom_kokkos_ptr() const { return lmp->atomKK; }
+
+// return the device type
+DLDeviceType FixDLExt::device_type(ExecutionSpace requested_space) const
+{
+    return (try_pick(requested_space) == kOnDevice) ? kDLCUDA : kDLCPU;
+}
+
+// return the device id 
+// TODO: infer this from the LAMMPS instance
+int FixDLExt::device_id() const { return 0; }
+
+int FixDLExt::local_particle_number() const { return atom_ptr()->nlocal; }
+bigint FixDLExt::global_particle_number() const { return atom_ptr()->natoms; }
+
+void FixDLExt::synchronize(ExecutionSpace requested_space)
+{
+    if (lmp->kokkos) {
+        atom_kokkos_ptr()->sync(try_pick(requested_space), DLEXT_MASK);
+        atom_kokkos_ptr()->k_map_array.sync_device();
+    }
+}
 
 void register_FixDLExt(LAMMPS* lmp)
 {
