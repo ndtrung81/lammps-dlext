@@ -91,8 +91,16 @@ DLDeviceType FixDLExt::device_type(ExecutionSpace requested_space) const
 }
 
 // return the device id 
-// TODO: infer this from the LAMMPS instance
-int FixDLExt::device_id() const { return 0; }
+//   TODO: would be handy if this can be available from lmp->kokkos
+//   KokkosLMP currently initializes KOKKOS with a temporary device_id in the class constructor
+//   but doesn't have this variable as a pubic class member
+int FixDLExt::device_id() const
+{
+#ifdef LMP_KOKKOS_GPU
+    return 0;
+#endif
+    return 0;
+}
 
 int FixDLExt::local_particle_number() const { return atom_ptr()->nlocal; }
 bigint FixDLExt::global_particle_number() const { return atom_ptr()->natoms; }

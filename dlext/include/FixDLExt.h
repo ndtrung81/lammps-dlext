@@ -4,6 +4,7 @@
 #ifndef DLEXT_SAMPLER_H_
 #define DLEXT_SAMPLER_H_
 
+#include "cxx11utils.h"
 #include "dlpack/dlpack.h"
 #include "fix.h"
 #include <functional>
@@ -12,6 +13,8 @@ namespace LAMMPS_NS
 {
 namespace dlext
 {
+
+using namespace cxx11;
 
 // { // Aliases
 const auto kOnHost = ExecutionSpace::Host;
