@@ -6,6 +6,7 @@
 
 #include "fix.h"
 #include <functional>
+#include "LAMMPSView.h"
 
 namespace LAMMPS_NS
 {
@@ -40,9 +41,9 @@ public:
     void set_virial_callback(DLExtSetVirial& cb);
     void set_virial_global(int flag) { virial_global_flag = flag; }
 
-protected:
-    class LAMMPSView view;
+    LAMMPSView view;
 
+protected:
     DLExtCallback callback = [](TimeStep) { };
     DLExtSetVirial setVirial = [](double*) { };
 };
