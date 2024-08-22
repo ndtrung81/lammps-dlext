@@ -4,6 +4,7 @@
 #ifndef DLEXT_SAMPLER_H_
 #define DLEXT_SAMPLER_H_
 
+#include "dlpack/dlpack.h"
 #include "fix.h"
 #include <functional>
 #include "LAMMPSView.h"
