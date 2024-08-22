@@ -189,7 +189,7 @@ template <typename Property>
 DLManagedTensor* wrap(const Fix* fix, Property property, ExecutionSpace exec_space)
 {
     // get the device type of the fix (host or device)
-    auto device_type = fix->device_type(exec_space);
+    auto device_type = fix->view.device_type(exec_space);
 
     auto bridge = std::make_unique<DLDataBridge>();
     bridge->tensor.manager_ctx = bridge.get();

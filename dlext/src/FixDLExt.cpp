@@ -40,6 +40,11 @@ FixDLExt::FixDLExt(LAMMPS* lmp, int narg, char** arg)
     execution_space = (on_host || !kokkosable) ? kOnHost : kOnDevice;
     datamask_read = EMPTY_MASK;
     datamask_modify = EMPTY_MASK;
+
+    // create an instance of LAMMPSView
+    // using default copy constructor and operator '=' of LAMMPSView works here
+    // because LAMMPSView simply encapsulates the LAMMPS pointers from lmp
+    view = LAMMPSView(lmp);
 }
 
 int FixDLExt::setmask()
@@ -68,6 +73,12 @@ void FixDLExt::set_callback(DLExtCallback& cb) { callback = cb; }
 
 // callback from the sampling method to set the virial contribution to the fix's virial
 void FixDLExt::set_virial_callback(DLExtSetVirial& cb) { setVirial = cb; }
+
+// set the LAMMPSView object
+void FixDLExt::set_view(LAMMPSView _view) { view = _view; }
+
+// get the LAMMPSView object
+LAMMPSView FixDLExt::get_view() const { return view; }
 
 void register_FixDLExt(LAMMPS* lmp)
 {

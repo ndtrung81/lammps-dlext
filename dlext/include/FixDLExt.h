@@ -41,12 +41,13 @@ public:
     void set_callback(DLExtCallback& cb);
     void set_virial_callback(DLExtSetVirial& cb);
     void set_virial_global(int flag) { virial_global_flag = flag; }
-
-    LAMMPSView view;
+    void set_view(LAMMPSView _view);
+    LAMMPSView get_view() const;
 
 protected:
     DLExtCallback callback = [](TimeStep) { };
     DLExtSetVirial setVirial = [](double*) { };
+    LAMMPSView view;
 };
 
 void register_FixDLExt(LAMMPS* lmp);
