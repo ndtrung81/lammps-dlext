@@ -97,19 +97,19 @@ inline void* opaque(const Atom* atom, TagsMap)
 inline void* opaque(const Fix* fix, Virial) { return opaque(fix->virial); }
 
 template <typename Property>
-inline void* opaque(const Fix* fixdlext, DLDeviceType device_type, Property p)
+inline void* opaque(const Fix* fix, DLDeviceType device_type, Property p)
 {
 #ifdef LMP_KOKKOS
     if (device_type == kDLCUDA)
-        return opaque(fixdlext->atom_kokkos_ptr(), p);
+        return opaque(fix->view.atom_kokkos_ptr(), p);
 #endif
-    return opaque(fixdlext->atom_ptr(), p);
+    return opaque(fix->view.atom_ptr(), p);
 }
 
 // get the device info (id) from fix and device_type, return a DLDevice struct
-inline DLDevice device_info(const Fix* fixdlext, DLDeviceType device_type)
+inline DLDevice device_info(const Fix* fix, DLDeviceType device_type)
 {
-    return DLDevice { device_type, fixdlext->device_id() };
+    return DLDevice { device_type, fix->view.device_id() };
 }
 
 // return the DLDataType code corresonding to the actual data type of the "Tag"
@@ -160,25 +160,25 @@ inline DLDataType dtype(DLDeviceType device_type, Property p)
 }
 
 template <typename Property>
-inline int64_t size(const Fix* fixdlext, Property)
+inline int64_t size(const Fix* fix, Property)
 {
-    return fixdlext->local_particle_number();
+    return fix->view.local_particle_number();
 }
-inline int64_t size(const Fix* fixdlext, Masses) { return fixdlext->atom_ptr()->ntypes + 1; }
-inline int64_t size(const Fix* fixdlext, TagsMap) { return fixdlext->atom_ptr()->get_map_size(); }
-inline int64_t size(const Fix* fixdlext, Virial) { return 6; }
+inline int64_t size(const Fix* fix, Masses) { return fix->view.atom_ptr()->ntypes + 1; }
+inline int64_t size(const Fix* fix, TagsMap) { return fix->view.atom_ptr()->get_map_size(); }
+inline int64_t size(const Fix* fix, Virial) { return 6; }
 
 template <typename Property>
-inline int64_t size(const Fix* fixdlext, Property, SecondDim)
+inline int64_t size(const Fix* fix, Property, SecondDim)
 {
     return 1;
 }
-inline int64_t size(const Fix* fixdlext, Positions, SecondDim) { return 3; }
-inline int64_t size(const Fix* fixdlext, Velocities, SecondDim) { return 3; }
-inline int64_t size(const Fix* fixdlext, Forces, SecondDim) { return 3; }
+inline int64_t size(const Fix* fix, Positions, SecondDim) { return 3; }
+inline int64_t size(const Fix* fix, Velocities, SecondDim) { return 3; }
+inline int64_t size(const Fix* fix, Forces, SecondDim) { return 3; }
 
 template <typename Property>
-constexpr uint64_t offset(const Fix* fixdlext, Property p)
+constexpr uint64_t offset(const Fix* fix, Property p)
 {
     return 0;
 }
@@ -186,10 +186,10 @@ constexpr uint64_t offset(const Fix* fixdlext, Property p)
 // a templated function for wrapping a C array given its data type and dimensions
 // and returning a pointer to a DLPack tensor 
 template <typename Property>
-DLManagedTensor* wrap(const Fix* fixdlext, Property property, ExecutionSpace exec_space)
+DLManagedTensor* wrap(const Fix* fix, Property property, ExecutionSpace exec_space)
 {
     // get the device type of the fix (host or device)
-    auto device_type = fixdlext->device_type(exec_space);
+    auto device_type = fix->device_type(exec_space);
 
     auto bridge = std::make_unique<DLDataBridge>();
     bridge->tensor.manager_ctx = bridge.get();
@@ -200,16 +200,16 @@ DLManagedTensor* wrap(const Fix* fixdlext, Property property, ExecutionSpace exe
 
     // fill in the dltensor struct
     // get the underlying array/accessor of the given property and assign it to data (as void*)
-    dltensor.data = opaque(fixdlext, device_type, property);
+    dltensor.data = opaque(fix, device_type, property);
     // get the device info from fix and device_type and assign it to device (as DLDevice)
-    dltensor.device = device_info(fixdlext, device_type);
+    dltensor.device = device_info(fix, device_type);
     // get the data type of the underlying array (DLDataType) given the data type code and number of bits
     dltensor.dtype = dtype(device_type, property);
 
     // fill in the tensor shape (dimensions), strides and byte offsets
     auto& shape = bridge->shape;
-    auto size2 = size(fixdlext, property, kSecondDim);
-    shape.push_back(size(fixdlext, property));
+    auto size2 = size(fix, property, kSecondDim);
+    shape.push_back(size(fix, property));
     // if the array is 2D
     if (size2 > 1)
         shape.push_back(size2);
@@ -222,16 +222,16 @@ DLManagedTensor* wrap(const Fix* fixdlext, Property property, ExecutionSpace exe
     dltensor.ndim = shape.size();
     dltensor.shape = reinterpret_cast<std::int64_t*>(shape.data());
     dltensor.strides = reinterpret_cast<std::int64_t*>(strides.data());
-    dltensor.byte_offset = offset(fixdlext, property);
+    dltensor.byte_offset = offset(fix, property);
 
     return &(bridge.release()->tensor);
 }
 
 // macro that returns a DLManagedTensor from fix for a given SELECTOR (Property)
 #define DLEXT_PROPERTY_FROM_FIX(FN, SELECTOR)                                \
-    inline DLManagedTensor* FN(const Fix* fixdlext, ExecutionSpace space)  \
+    inline DLManagedTensor* FN(const Fix* fix, ExecutionSpace space)  \
     {                                                                         \
-        return wrap(fixdlext, SELECTOR, space);                                   \
+        return wrap(fix, SELECTOR, space);                                   \
     }
 
 // finally, all the function instances to pack arrays into DLManagedTensor structs

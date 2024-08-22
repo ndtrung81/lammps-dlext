@@ -49,17 +49,6 @@ int FixDLExt::setmask()
 
 void FixDLExt::post_force(int vflag) 
 {
-#ifdef LMP_KOKKOS
-    if (has_kokkos_cuda_enabled(lmp)) {
-        // Since there's is no MASS_MASK, we need to make sure
-        // masses are available on the device.
-        atom_kokkos_ptr()->k_mass.sync_device();
-        // On the other hand, MAP_MASK exists, but it's never used
-        // within any of the synchronizations methods.
-        atom_kokkos_ptr()->k_map_array.sync_device();
-    }
-#endif
-
     // virial setup
 
     v_init(vflag);
@@ -79,39 +68,6 @@ void FixDLExt::set_callback(DLExtCallback& cb) { callback = cb; }
 
 // callback from the sampling method to set the virial contribution to the fix's virial
 void FixDLExt::set_virial_callback(DLExtSetVirial& cb) { setVirial = cb; }
-
-// return the pointer to the atom pointer
-Atom* FixDLExt::atom_ptr() const { return lmp->atom; }
-AtomKokkos* FixDLExt::atom_kokkos_ptr() const { return lmp->atomKK; }
-
-// return the device type
-DLDeviceType FixDLExt::device_type(ExecutionSpace requested_space) const
-{
-    return (try_pick(requested_space) == kOnDevice) ? kDLCUDA : kDLCPU;
-}
-
-// return the device id 
-//   TODO: would be handy if this can be available from lmp->kokkos
-//   KokkosLMP currently initializes KOKKOS with a temporary device_id in the class constructor
-//   but doesn't have this variable as a pubic class member
-int FixDLExt::device_id() const
-{
-#ifdef LMP_KOKKOS_GPU
-    return 0;
-#endif
-    return 0;
-}
-
-int FixDLExt::local_particle_number() const { return atom_ptr()->nlocal; }
-bigint FixDLExt::global_particle_number() const { return atom_ptr()->natoms; }
-
-void FixDLExt::synchronize(ExecutionSpace requested_space)
-{
-    if (lmp->kokkos) {
-        atom_kokkos_ptr()->sync(try_pick(requested_space), DLEXT_MASK);
-        atom_kokkos_ptr()->k_map_array.sync_device();
-    }
-}
 
 void register_FixDLExt(LAMMPS* lmp)
 {

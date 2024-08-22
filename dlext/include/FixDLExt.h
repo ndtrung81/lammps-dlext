@@ -4,8 +4,6 @@
 #ifndef DLEXT_SAMPLER_H_
 #define DLEXT_SAMPLER_H_
 
-#include "cxx11utils.h"
-#include "dlpack/dlpack.h"
 #include "fix.h"
 #include <functional>
 
@@ -14,11 +12,7 @@ namespace LAMMPS_NS
 namespace dlext
 {
 
-using namespace cxx11;
-
 // { // Aliases
-const auto kOnHost = ExecutionSpace::Host;
-const auto kOnDevice = ExecutionSpace::Device;
 
 using TimeStep = bigint;  // bigint depends on how LAMMPS was built
 using DLExtCallback = std::function<void(TimeStep)>;
@@ -46,35 +40,12 @@ public:
     void set_virial_callback(DLExtSetVirial& cb);
     void set_virial_global(int flag) { virial_global_flag = flag; }
 
-    // Provide easy access to the atom pointers
-    Atom* atom_ptr() const;
-    AtomKokkos* atom_kokkos_ptr() const;
+protected:
+    class LAMMPSView view;
 
-    //! Given an execution space, returns kDLCUDA if LAMMPS was built with KOKKOS and
-    //! Cuda supoprt, and it's available at runtime. Otherwise, returns kDLCPU.
-    DLDeviceType device_type(ExecutionSpace requested_space) const;
-
-    //! The device id where this class instances are being executed
-    int device_id() const;
-
-    // Convenience methods for retriving the number of particles
-    int local_particle_number() const;
-    bigint global_particle_number() const;
-
-    //! If KOKKOS is available, synchronize on the particle data on the requested space
-    void synchronize(ExecutionSpace requested_space = kOnDevice);
-
-private:
     DLExtCallback callback = [](TimeStep) { };
     DLExtSetVirial setVirial = [](double*) { };
-    ExecutionSpace try_pick(ExecutionSpace requested_space) const;
 };
-
-inline bool has_kokkos_cuda_enabled(LAMMPS* lmp)
-{
-    bool has_cuda = strcmp(LMPDeviceType::name(), "Cuda") == 0;
-    return has_cuda & (lmp->kokkos != nullptr);
-}
 
 void register_FixDLExt(LAMMPS* lmp);
 
